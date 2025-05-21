@@ -1,1 +1,64 @@
 
+import scanpy as sc
+import pandas as pd
+import matplotlib.pyplot as plt
+import seaborn as sns
+import numpy as np
+
+
+adata = sc.read_visium('DD073R_A1_processed')
+adata.var_names_make_unique()
+
+/home/jrlab2019/miniconda3/envs/sc/lib/python3.9/site-packages/anndata/_core/anndata.py:1830: UserWarning: Variable names are not unique. To make them unique, call `.var_names_make_unique`.
+  utils.warn_names_duplicates("var")
+
+adata
+
+AnnData object with n_obs × n_vars = 1175 × 36601
+    obs: 'in_tissue', 'array_row', 'array_col'
+    var: 'gene_ids', 'feature_types', 'genome'
+    uns: 'spatial'
+    obsm: 'spatial'
+
+adata.uns['spatial']['DD73RA1_rep2']['images']['hires'].shape
+
+(2000, 1815, 3)
+
+adata.obsm['spatial'].shape
+
+(1175, 2)
+
+adata.obs
+
+adata.obs['thing'] = 'a'
+
+plt.rcParams["figure.figsize"] = (8, 8)
+sc.pl.spatial(adata, color = 'thing')
+
+#https://scanpy-tutorials.readthedocs.io/en/latest/spatial/basic-analysis.html
+
+adata.var["mt"] = adata.var_names.str.startswith("MT-")
+sc.pp.calculate_qc_metrics(adata, qc_vars=["mt"], inplace=True)
+
+adata.obs
+
+fig, axs = plt.subplots(1, 4, figsize=(15, 4))
+sns.distplot(adata.obs["total_counts"], kde=False, ax=axs[0])
+sns.distplot(adata.obs["total_counts"][adata.obs["total_counts"] < 10000], kde=False, bins=40, ax=axs[1])
+sns.distplot(adata.obs["n_genes_by_counts"], kde=False, bins=60, ax=axs[2])
+sns.distplot(adata.obs["n_genes_by_counts"][adata.obs["n_genes_by_counts"] < 4000], kde=False, bins=60, ax=axs[3])
+
+plt.show()
+
+sns.distplot(adata.obs["total_counts"][adata.obs["total_counts"] < 2000], kde=False, bins=40)
+
+<AxesSubplot:xlabel='total_counts'>
+
+sc.pp.filter_cells(adata, min_counts = 1000)
+
+sc.pp.filter_cells(adata, max_counts=35000) #based on the following QC this should be reduced
+
+sc.pl.violin(adata, ['pct_counts_mt'], jitter=0.4)
+
+
+
